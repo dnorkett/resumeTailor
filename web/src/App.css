@@ -121,6 +121,7 @@
 
 .fieldLabel {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   font-size: 13px;
@@ -132,8 +133,13 @@
   border-radius: 10px;
   padding: 8px 10px;
   background: white;
+  color: var(--text);
   font-size: 13px;
   outline: none;
+}
+
+.select::placeholder {
+  color: #94a3b8;
 }
 
 .select:focus {

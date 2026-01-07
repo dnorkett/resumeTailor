@@ -11,6 +11,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [company, setCompany] = useState("");  
 
   function downloadTextFile({ filename, content, mime }) {
     const blob = new Blob([content], { type: mime });
@@ -27,14 +30,29 @@ export default function App() {
     URL.revokeObjectURL(url);
   }
 
-  function isoDateForFilename() {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+  function slugifyForFilename(s) {
+  return String(s || "")
+    .trim()
+    .replace(/['"]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 40);
   }
 
+  function buildResumeFilenameBase() {
+    const first = slugifyForFilename(firstName);
+    const last = slugifyForFilename(lastName);
+    const comp = slugifyForFilename(company);
+
+    const namePart =
+      first && last ? `${first}_${last}` : first || last || "Resume";
+
+    // Desired: FIRST_LAST_COMPANY_RESUME
+    if (comp) return `${namePart}_${comp}_Resume`;
+    return `${namePart}_Resume`;
+  }
+  
   async function generate() {
     setError("");
     setOutput("");
@@ -61,7 +79,7 @@ export default function App() {
     }
   }
 
-  async function downloadDocx() {
+  async function downloadDocx(baseFilename) {
     const res = await fetch(`${API_BASE}/api/export/docx`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -78,7 +96,7 @@ export default function App() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "tailored-resume.docx";
+    a.download = `${baseFilename}.docx`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -102,6 +120,36 @@ export default function App() {
         <div className="controlsRow">
           <div className="controlsLeft">            
 
+            <label className="fieldLabel">
+              First
+              <input
+                className="select"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First"
+              />
+            </label>
+
+            <label className="fieldLabel">
+              Last
+              <input
+                className="select"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last"
+              />
+            </label>
+
+            <label className="fieldLabel">
+              Company
+              <input
+                className="select"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Company"
+              />
+            </label>
+            
             <label className="fieldLabel">
               Tone
               <select className="select" value={tone} onChange={(e) => setTone(e.target.value)}>
@@ -128,11 +176,14 @@ export default function App() {
             
             <button 
               className="buttonSecondary"
-              onClick={() => 
+              onClick={() => {
+                const base = buildResumeFilenameBase();
                 downloadTextFile({
-                    filename: `tailored-resume-${isoDateForFilename()}.md`, content: output, mime: "text/markdown;charset=utf-8", 
-                  })
-              }
+                filename: `${base}.md`,
+                content: output,
+                mime: "text/markdown;charset=utf-8",
+                });
+              }}
               disabled={!output}
               >
               Download .md
@@ -141,15 +192,16 @@ export default function App() {
               className="buttonSecondary"
               onClick={async () => {
                 try {
-                  await downloadDocx();
+                  const base = buildResumeFilenameBase();
+                  await downloadDocx(base);
                 } catch (e) {
                   setError(e.message);
                 }
               }}
-              disabled={!output}
+              disabled={!output}              
             >
               Download .docx
-          </button>
+            </button>
           </div>
         </div>
       </div>
