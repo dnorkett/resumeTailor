@@ -1,5 +1,8 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
 
+const COLOR_HEADER = "2E3A46"; // slate blue
+const COLOR_BODY = "0F172A"; // near-black
+
 function cleanLine(s) {
   return String(s || "").trimEnd();
 }
@@ -59,7 +62,7 @@ function runsFromMarkdownInline(text) {
   return runs.length ? runs : [new TextRun(s)];
 }
 
-function boldRunsSized(text, sizeHalfPoints) {
+function boldRunsSized(text, sizeHalfPoints, color) {
   // Strips ** and forces bold at a specific size
   const cleaned = String(text || "").replace(/\*\*/g, "");
   return [
@@ -67,6 +70,7 @@ function boldRunsSized(text, sizeHalfPoints) {
       text: cleaned,
       bold: true,
       size: sizeHalfPoints,
+      ...(color ? { color } : {}),
     }),
   ];
 }
@@ -119,9 +123,10 @@ function markdownToParagraphs(markdown) {
             new TextRun({
               text: text.toUpperCase(),
               bold: true,
+              color: COLOR_HEADER,
             }),
           ],
-          spacing: { before: 200, after: 80 },
+          spacing: { before: 120, after: 60 },
           border: {
             bottom: { color: "D9E1EC", size: 6, space: 10 },
           },
@@ -135,7 +140,7 @@ function markdownToParagraphs(markdown) {
     if (line.startsWith("# ")) {
       paragraphs.push(
         new Paragraph({
-          children: boldRunsSized(line.slice(2).trim(), 30), // 15pt
+          children: boldRunsSized(line.slice(2).trim(), 30, COLOR_HEADER), // 15pt, header color
           heading: HeadingLevel.HEADING_1,
           spacing: { before: 240, after: 110 },
         })
@@ -147,9 +152,9 @@ function markdownToParagraphs(markdown) {
     if (line.startsWith("## ")) {
       paragraphs.push(
         new Paragraph({
-          children: boldRunsSized(line.slice(3).trim(), 26), // 13pt
+          children: boldRunsSized(line.slice(3).trim(), 26, COLOR_HEADER), // 13pt, header color
           heading: HeadingLevel.HEADING_2,
-          spacing: { before: 200, after: 90 },
+          spacing: { before: 120, after: 60 },
         })
       );
       lastWasSectionHeading = true;
@@ -160,9 +165,9 @@ function markdownToParagraphs(markdown) {
     if (line.startsWith("### ")) {
       paragraphs.push(
         new Paragraph({
-          children: boldRunsSized(line.slice(4).trim(), 22), // 11pt
+          children: boldRunsSized(line.slice(4).trim(), 22), // 11pt, near-black (default)
           heading: HeadingLevel.HEADING_3,
-          spacing: { before: 160, after: 60 },
+          spacing: { before: 90, after: 24 },
         })
       );
       // Do NOT set lastWasSectionHeading here; we want spacing between sections and roles,
@@ -183,7 +188,7 @@ function markdownToParagraphs(markdown) {
         new Paragraph({
           children: runsFromMarkdownInline(content),
           bullet: { level: 0 },
-          spacing: { after: 60 },
+          spacing: { after: 24 },
         })
       );
       continue;
@@ -193,7 +198,7 @@ function markdownToParagraphs(markdown) {
     paragraphs.push(
       new Paragraph({
         children: runsFromMarkdownInline(line),
-        spacing: { after: 90 },
+        spacing: { after: 60 },
       })
     );
   }
@@ -213,6 +218,7 @@ export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
             text: nameLine,
             bold: true,
             size: 36, // 18pt (docx uses half-points)
+            color: COLOR_HEADER,
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -230,7 +236,7 @@ export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
           run: {
             font: "Calibri",
             size: 22, // 11pt
-            color: "0F172A",
+            color: COLOR_BODY,
           },
           paragraph: {
             spacing: { line: 276 }, // ~1.15

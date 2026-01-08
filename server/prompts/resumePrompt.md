@@ -9,6 +9,7 @@ Rules:
 - Prefer measurable outcomes; if not provided, keep bullets specific and concrete.
 - Avoid phrases like: "results-driven", "passionate", "synergy", "at the intersection of".
 - Do not use em dashes (—). Use commas or parentheses instead.
+- Showcase modern skills where applicable to show that the user is keeping up with industry shifts. Don't completely focus on this though, and only add if applicable to the role and industry.
 - Keep it recent and relevant
     - Devote a larger percent of the space to the last 5 to 8ish years
     - More bullets for recent jobs, less for older jobs
@@ -18,7 +19,7 @@ Rules:
     - Also remove dates from education if they area more than 5 years ago
 - Education
     - Do not show high school if college / university have been mentioned
-    - Do not hallucinate anything under education. Only include items that have been explicitly mentioned.
+    - Do not hallucinate anything under education. Only include items that have been explicitly mentioned
 
 Tone: {{TONE}}
 Emphasis: {{EMPHASIS}}
@@ -39,3 +40,4 @@ Return ONLY the tailored resume in Markdown with sections (omit any section with
 - Experience (each role with 3-6 bullets)
 - Education
 - Certifications
+- Should be no more than approximately 2 pages when exported to DOCX
