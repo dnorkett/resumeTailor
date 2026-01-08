@@ -65,7 +65,10 @@ app.post("/api/export/docx", async (req, res) => {
       return res.status(400).json({ error: "Missing markdown content." });
     }
 
-    const buffer = await buildDocxBufferFromMarkdown(markdown);
+    const buffer = await buildDocxBufferFromMarkdown(markdown, {
+        firstName: req.body?.firstName,
+        lastName: req.body?.lastName,
+    });
 
     res.setHeader(
       "Content-Type",

@@ -83,7 +83,11 @@ export default function App() {
     const res = await fetch(`${API_BASE}/api/export/docx`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markdown: output }),
+      body: JSON.stringify({ 
+        markdown: output,
+        firstName,
+        lastName 
+      }),
     });
 
     if (!res.ok) {

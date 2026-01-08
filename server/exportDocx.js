@@ -1,68 +1,181 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+
+function cleanLine(s) {
+  return String(s || "").trimEnd();
+}
+
+// Detect section headings even if the model doesn't use "#"
+function isSectionHeading(line) {
+  const t = line.trim();
+  if (!t) return false;
+
+  const known = [
+    "SUMMARY",
+    "CORE SKILLS",
+    "SKILLS",
+    "EXPERIENCE",
+    "EDUCATION",
+    "CERTIFICATIONS",
+    "PROJECTS",
+  ];
+
+  const upper = t.replace(/:$/, "").toUpperCase();
+  return known.includes(upper);
+}
+
+function sectionHeadingText(line) {
+  return line.trim().replace(/:$/, "");
+}
+
+function buildNameLine(meta) {
+  const fn = String(meta?.firstName || "").trim();
+  const ln = String(meta?.lastName || "").trim();
+  const full = `${fn} ${ln}`.trim();
+  return full || null;
+}
 
 /**
- * Very simple Markdown-ish parser:
- * - "# " => Heading 1
- * - "## " => Heading 2
- * - "- " or "* " => bullet
- * - blank line => spacing
- * - everything else => normal paragraph
- *
- * This is intentionally minimal for v1. 
+ * Minimal inline Markdown parser:
+ * - supports **bold**
+ * (Good enough for resumes; we can extend later if needed.)
  */
+function runsFromMarkdownInline(text) {
+  const s = String(text || "");
+  const parts = s.split("**");
 
+  const runs = [];
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+
+    runs.push(
+      new TextRun({
+        text: part,
+        bold: i % 2 === 1, // odd indices are inside ** **
+      })
+    );
+  }
+
+  return runs.length ? runs : [new TextRun(s)];
+}
+
+function boldRunsSized(text, sizeHalfPoints) {
+  // Strips ** and forces bold at a specific size
+  const cleaned = String(text || "").replace(/\*\*/g, "");
+  return [
+    new TextRun({
+      text: cleaned,
+      bold: true,
+      size: sizeHalfPoints,
+    }),
+  ];
+}
+
+/**
+ * Converts markdown-ish resume content into docx Paragraph objects.
+ * Supports:
+ * - #, ##, ### headings
+ * - Section headings without # (e.g., "Experience")
+ * - Bullets: "- ", "* ", and common bullet characters like "●" / "•"
+ * - Inline bold via **text**
+ */
 function markdownToParagraphs(markdown) {
   const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
-
   const paragraphs = [];
 
   for (const raw of lines) {
-    const line = raw.trimEnd();
+    const line = cleanLine(raw);
 
+    // Blank line => spacer
     if (!line.trim()) {
-      // Add a small spacer paragraph
-      paragraphs.push(new Paragraph({ children: [new TextRun("")], spacing: { after: 120 } }));
+      paragraphs.push(
+        new Paragraph({
+          children: [new TextRun("")],
+          spacing: { after: 90 },
+        })
+      );
+      continue;
+    }
+
+    // Section headings even without #
+    if (isSectionHeading(line)) {
+      const text = sectionHeadingText(line);
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: text.toUpperCase(),
+              bold: true,
+            }),
+          ],
+          spacing: { before: 200, after: 80 },
+          border: {
+            bottom: { color: "D9E1EC", size: 6, space: 10 },
+          },
+        })
+      );
+      continue;
+    }
+
+    // Markdown headings (use children so inline **bold** works)
+    if (line.startsWith("# ")) {
+      paragraphs.push(
+        new Paragraph({
+          children: boldRunsSized(line.slice(2).trim(), 30), // 15pt
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 240, after: 110 },
+        })
+      );
       continue;
     }
 
     if (line.startsWith("## ")) {
       paragraphs.push(
         new Paragraph({
-          text: line.slice(3).trim(),
+          children: boldRunsSized(line.slice(3).trim(), 26), // 13pt
           heading: HeadingLevel.HEADING_2,
-          spacing: { before: 200, after: 120 },
+          spacing: { before: 200, after: 90 },
         })
       );
       continue;
     }
 
-    if (line.startsWith("# ")) {
+    // Job title lines often come through as ### ...
+    if (line.startsWith("### ")) {
       paragraphs.push(
         new Paragraph({
-          text: line.slice(2).trim(),
-          heading: HeadingLevel.HEADING_1,
-          spacing: { before: 240, after: 140 },
+          children: boldRunsSized(line.slice(4).trim(), 22), // 11pt
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 160, after: 60 },
         })
       );
       continue;
     }
 
-    if (line.startsWith("- ") || line.startsWith("* ")) {
+    // Bullets: "-", "*", plus "●" / "•" / other common bullet glyphs
+    const isDashBullet = line.startsWith("- ") || line.startsWith("* ");
+    const isDotBullet = /^([•●‣◦])\s+/.test(line.trimStart());
+
+    if (isDashBullet || isDotBullet) {
+      const content = isDashBullet
+        ? line.slice(2).trim()
+        : line.trimStart().replace(/^([•●‣◦])\s+/, "");
+
       paragraphs.push(
         new Paragraph({
-          text: line.slice(2).trim(),
+          children: runsFromMarkdownInline(content),
           bullet: { level: 0 },
-          spacing: { after: 80 },
+          spacing: { after: 60 },
         })
       );
       continue;
     }
 
-    // Normal paragraph
+    // Normal paragraph (supports inline **bold**)
     paragraphs.push(
       new Paragraph({
-        children: [new TextRun(line)],
-        spacing: { after: 120 },
+        children: runsFromMarkdownInline(line),
+        spacing: { after: 90 },
       })
     );
   }
@@ -70,16 +183,85 @@ function markdownToParagraphs(markdown) {
   return paragraphs;
 }
 
-export async function buildDocxBufferFromMarkdown(markdown) {
+export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
+  const nameLine = buildNameLine(meta);
+
+  const header = [];
+  if (nameLine) {
+    header.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: nameLine,
+            bold: true,
+            size: 36, // 18pt (docx uses half-points)
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+      })
+    );
+  }
+
+  const body = markdownToParagraphs(markdown);
+
   const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: "Calibri",
+            size: 22, // 11pt
+            color: "0F172A",
+          },
+          paragraph: {
+            spacing: { line: 276 }, // ~1.15
+          },
+        },
+      },
+      paragraphStyles: [
+        {
+        id: "Heading1",
+        name: "Heading 1",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { bold: true, size: 30 }, // 15pt
+        paragraph: { spacing: { before: 240, after: 120 } },
+        },
+        {
+        id: "Heading2",
+        name: "Heading 2",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { bold: true, size: 26 }, // 13pt
+        paragraph: { spacing: { before: 220, after: 90 } },
+        },
+        {
+        id: "Heading3",
+        name: "Heading 3",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { bold: true, size: 22 }, // 11pt
+        paragraph: { spacing: { before: 160, after: 60 } },
+        },
+      ],
+    },
     sections: [
       {
-        properties: {},
-        children: markdownToParagraphs(markdown),
+        properties: {
+          page: {
+            margin: {
+              top: 720, // 0.5"
+              right: 720,
+              bottom: 720,
+              left: 720,
+            },
+          },
+        },
+        children: [...header, ...body],
       },
     ],
   });
 
-  // Returns a Node Buffer
   return await Packer.toBuffer(doc);
 }
