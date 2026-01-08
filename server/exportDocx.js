@@ -78,16 +78,25 @@ function boldRunsSized(text, sizeHalfPoints) {
  * - Section headings without # (e.g., "Experience")
  * - Bullets: "- ", "* ", and common bullet characters like "●" / "•"
  * - Inline bold via **text**
+ *
+ * Additional formatting normalization:
+ * - Removes blank lines immediately after section headings (## Experience -> ### Role)
  */
 function markdownToParagraphs(markdown) {
   const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
   const paragraphs = [];
+  let lastWasSectionHeading = false;
 
   for (const raw of lines) {
     const line = cleanLine(raw);
 
-    // Blank line => spacer
+    // Blank line handling
     if (!line.trim()) {
+      // Skip blank lines immediately after section headings (e.g. "## Experience")
+      if (lastWasSectionHeading) {
+        continue;
+      }
+
       paragraphs.push(
         new Paragraph({
           children: [new TextRun("")],
@@ -96,6 +105,10 @@ function markdownToParagraphs(markdown) {
       );
       continue;
     }
+
+    // Any non-blank line resets the "blank-after-heading" suppression state,
+    // except we re-enable it on heading branches below.
+    lastWasSectionHeading = false;
 
     // Section headings even without #
     if (isSectionHeading(line)) {
@@ -114,10 +127,11 @@ function markdownToParagraphs(markdown) {
           },
         })
       );
+      lastWasSectionHeading = true;
       continue;
     }
 
-    // Markdown headings (use children so inline **bold** works)
+    // Markdown headings
     if (line.startsWith("# ")) {
       paragraphs.push(
         new Paragraph({
@@ -126,6 +140,7 @@ function markdownToParagraphs(markdown) {
           spacing: { before: 240, after: 110 },
         })
       );
+      lastWasSectionHeading = true;
       continue;
     }
 
@@ -137,6 +152,7 @@ function markdownToParagraphs(markdown) {
           spacing: { before: 200, after: 90 },
         })
       );
+      lastWasSectionHeading = true;
       continue;
     }
 
@@ -149,6 +165,8 @@ function markdownToParagraphs(markdown) {
           spacing: { before: 160, after: 60 },
         })
       );
+      // Do NOT set lastWasSectionHeading here; we want spacing between sections and roles,
+      // but not to suppress content following roles.
       continue;
     }
 
@@ -221,28 +239,28 @@ export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
       },
       paragraphStyles: [
         {
-        id: "Heading1",
-        name: "Heading 1",
-        basedOn: "Normal",
-        next: "Normal",
-        run: { bold: true, size: 30 }, // 15pt
-        paragraph: { spacing: { before: 240, after: 120 } },
+          id: "Heading1",
+          name: "Heading 1",
+          basedOn: "Normal",
+          next: "Normal",
+          run: { bold: true, size: 30 }, // 15pt
+          paragraph: { spacing: { before: 240, after: 120 } },
         },
         {
-        id: "Heading2",
-        name: "Heading 2",
-        basedOn: "Normal",
-        next: "Normal",
-        run: { bold: true, size: 26 }, // 13pt
-        paragraph: { spacing: { before: 220, after: 90 } },
+          id: "Heading2",
+          name: "Heading 2",
+          basedOn: "Normal",
+          next: "Normal",
+          run: { bold: true, size: 26 }, // 13pt
+          paragraph: { spacing: { before: 220, after: 90 } },
         },
         {
-        id: "Heading3",
-        name: "Heading 3",
-        basedOn: "Normal",
-        next: "Normal",
-        run: { bold: true, size: 22 }, // 11pt
-        paragraph: { spacing: { before: 160, after: 60 } },
+          id: "Heading3",
+          name: "Heading 3",
+          basedOn: "Normal",
+          next: "Normal",
+          run: { bold: true, size: 22 }, // 11pt
+          paragraph: { spacing: { before: 160, after: 60 } },
         },
       ],
     },
