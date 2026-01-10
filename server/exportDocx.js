@@ -75,6 +75,31 @@ function boldRunsSized(text, sizeHalfPoints, color) {
   ];
 }
 
+function normalizePhone(input) {
+  const raw = String(input || "").trim();
+  if (!raw) return "";
+
+  // Keep only digits
+  const digits = raw.replace(/\D/g, "");
+
+  // Handle US numbers:
+  // - 10 digits: (AAA) BBB-CCCC
+  // - 11 digits starting with 1: treat as US country code
+  let d = digits;
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+
+  if (d.length === 10) {
+    const area = d.slice(0, 3);
+    const prefix = d.slice(3, 6);
+    const line = d.slice(6);
+    return `(${area}) ${prefix}-${line}`;
+  }
+
+  // If it's not a standard US 10-digit number, don't guess.
+  // Return the user's original trimmed input.
+  return raw;
+}
+
 function normalizeLinkedIn(input) {
   let s = String(input || "").trim();
   if (!s) return "";
@@ -151,12 +176,12 @@ function renderEducationLine(line) {
 
 function buildContactLine(meta = {}) {
   const location = String(meta.location || "").trim();
-  const phone = String(meta.phone || "").trim();
+  const phone = normalizePhone(meta.phone);
   const email = String(meta.email || "").trim();
   const linkedIn = normalizeLinkedIn(meta.linkedIn);
 
   const parts = [location, phone, email, linkedIn].filter(Boolean);
-  return parts.length ? parts.join(" • ") : null;
+  return parts.length ? parts.join(" | ") : null;
 }
 
 /**
