@@ -21,7 +21,8 @@ Return ONLY Markdown with the following sections.
 Omit any section with no supporting content.
 
 ## Summary
-3-4 concise lines focused on fit for the role.
+Write a single concise paragraph (no bullet points, no line breaks).
+3-4 sentences focused on fit for the role.
 
 ## Core Skills
 Bulleted list, keyword-dense.
