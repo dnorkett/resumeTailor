@@ -53,7 +53,10 @@ Exported files are automatically named using the candidate’s name and target c
 /server
   /prompts
     resumePrompt.md
+    composePrompt.md
+    extractPrompt.md
   exportDocx.js
+  extractSchema.js
   index.js
   prompt.js
 
@@ -108,13 +111,10 @@ The app will be available at `http://localhost:5173`.
 
 - This project is intentionally simple and focused.
 - Prompts are externalized for easy iteration.
-- Designed as a practical resume-tailoring tool, not a resume generator from scratch.
 
 ---
 
 ## Future Ideas
 
-- Two-pass generation for improved content quality
-- Keyword coverage and gap analysis
 - Markdown preview
 - Resume versioning per job or company
