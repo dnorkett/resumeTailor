@@ -101,7 +101,7 @@ app.post("/api/export/docx", async (req, res) => {
         location: req.body?.location,
         phone: req.body?.phone,
         email: req.body?.email,
-        linkedin: req.body?.linkedin,
+        linkedIn: req.body?.linkedIn,
     });
 
     res.setHeader(
@@ -109,7 +109,7 @@ app.post("/api/export/docx", async (req, res) => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
     res.setHeader("Content-Disposition", 'attachment; filename="tailored-resume.docx"');
-
+    
     return res.send(buffer);
   } catch (err) {
     console.error(err);

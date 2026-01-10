@@ -76,18 +76,27 @@ function boldRunsSized(text, sizeHalfPoints, color) {
 }
 
 function normalizeLinkedIn(input) {
-  const s = String(input || "").trim();
+  let s = String(input || "").trim();
   if (!s) return "";
 
-  // Already a URL
+  // Strip common prefixes like "LinkedIn:" if someone pastes a labeled line
+  s = s.replace(/^linkedin\s*[:\-–—]\s*/i, "").trim();
+
+  // If it's already a URL, use as-is
   if (/^https?:\/\//i.test(s)) return s;
 
-  // Looks like linkedin.com/in/...
-  if (/^linkedin\.com\//i.test(s)) return `https://${s}`;
+  // If it's a LinkedIn domain (with or without www), just add https://
+  if (/^(www\.)?linkedin\.com\//i.test(s)) return `https://${s}`;
 
-  // Looks like a handle: "your-handle"
-  return `https://linkedin.com/in/${s.replace(/^@/, "")}`;
+  // If user gave "in/handle" or "/in/handle"
+  s = s.replace(/^\/+/, "");
+  if (/^in\//i.test(s)) return `https://linkedin.com/${s}`;
+
+  // Otherwise treat it as a handle (e.g., "youa" or "@youa")
+  const handle = s.replace(/^@/, "").replace(/\s+/g, "");
+  return `https://linkedin.com/in/${handle}`;
 }
+
 
 
 function renderEducationLine(line) {
@@ -233,7 +242,7 @@ function markdownToParagraphs(markdown) {
 
       paragraphs.push(
         new Paragraph({
-          children: boldRunsSized(line.slice(3).trim(), 26, COLOR_HEADER), // 13pt, header color
+          children: boldRunsSized(headingText, 26, COLOR_HEADER), // 13pt, header color
           heading: HeadingLevel.HEADING_2,
           spacing: { before: 120, after: 60 },
         })
@@ -260,6 +269,12 @@ function markdownToParagraphs(markdown) {
     const isDashBullet = line.startsWith("- ") || line.startsWith("* ");
     const isDotBullet = /^([•●‣◦])\s+/.test(line.trimStart());
 
+    if (inEducationSection && !line.startsWith("- ") && !line.startsWith("* ")) {
+        const eduParagraphs = renderEducationLine(line);
+        paragraphs.push(...eduParagraphs);
+        continue;
+    }
+    
     if (isDashBullet || isDotBullet) {
       const content = isDashBullet
         ? line.slice(2).trim()
@@ -273,12 +288,6 @@ function markdownToParagraphs(markdown) {
         })
       );
       continue;
-    }
-
-    if (inEducationSection && !line.startsWith("- ") && !line.startsWith("* ")) {
-        const eduParagraphs = renderEducationLine(line);
-        paragraphs.push(...eduParagraphs);
-        continue;
     }
 
     // Normal paragraph (supports inline **bold**)
@@ -311,7 +320,7 @@ export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
           }),
         ],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 120 },
+        spacing: { after: contactLine ? 40: 120 },
       })
     );
   }
