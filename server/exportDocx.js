@@ -75,6 +75,56 @@ function boldRunsSized(text, sizeHalfPoints, color) {
   ];
 }
 
+function renderEducationLine(line) {
+  // Degree + field + institution usually come on one line
+  // Example:
+  // Bachelor of Business Administration, Accounting — University Texas
+
+  const cleaned = line.replace(/\*\*/g, "");
+
+  // Split only on common "separator" patterns between degree and institution.
+  // - em dash (—), en dash (–), pipe (|), or a hyphen surrounded by spaces (" - ")
+  const parts = cleaned
+    .split(/\s*(?:—|–|\|)\s*|\s-\s/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const degreePart = parts[0] ?? "";
+  const institutionPart = parts[1] ?? "";
+
+  const paragraphs = [];
+
+  if (degreePart) {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: degreePart,
+            bold: true,
+          }),
+        ],
+        spacing: { after: 40 },
+      })
+    );
+  }
+
+  if (institutionPart) {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: institutionPart,
+            italics: true,
+          }),
+        ],
+        spacing: { after: 60 },
+      })
+    );
+  }
+
+  return paragraphs;
+}
+
 /**
  * Converts markdown-ish resume content into docx Paragraph objects.
  * Supports:
@@ -90,6 +140,7 @@ function markdownToParagraphs(markdown) {
   const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
   const paragraphs = [];
   let lastWasSectionHeading = false;
+  let inEducationSection = false;
 
   for (const raw of lines) {
     const line = cleanLine(raw);
@@ -117,6 +168,8 @@ function markdownToParagraphs(markdown) {
     // Section headings even without #
     if (isSectionHeading(line)) {
       const text = sectionHeadingText(line);
+      inEducationSection = text.toUpperCase() === "EDUCATION";
+
       paragraphs.push(
         new Paragraph({
           children: [
@@ -150,6 +203,9 @@ function markdownToParagraphs(markdown) {
     }
 
     if (line.startsWith("## ")) {
+      const headingText = line.slice(3).trim();
+      inEducationSection = headingText.toUpperCase() === "EDUCATION";
+
       paragraphs.push(
         new Paragraph({
           children: boldRunsSized(line.slice(3).trim(), 26, COLOR_HEADER), // 13pt, header color
@@ -192,6 +248,12 @@ function markdownToParagraphs(markdown) {
         })
       );
       continue;
+    }
+
+    if (inEducationSection && !line.startsWith("- ") && !line.startsWith("* ")) {
+        const eduParagraphs = renderEducationLine(line);
+        paragraphs.push(...eduParagraphs);
+        continue;
     }
 
     // Normal paragraph (supports inline **bold**)
