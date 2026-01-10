@@ -75,6 +75,21 @@ function boldRunsSized(text, sizeHalfPoints, color) {
   ];
 }
 
+function normalizeLinkedIn(input) {
+  const s = String(input || "").trim();
+  if (!s) return "";
+
+  // Already a URL
+  if (/^https?:\/\//i.test(s)) return s;
+
+  // Looks like linkedin.com/in/...
+  if (/^linkedin\.com\//i.test(s)) return `https://${s}`;
+
+  // Looks like a handle: "your-handle"
+  return `https://linkedin.com/in/${s.replace(/^@/, "")}`;
+}
+
+
 function renderEducationLine(line) {
   // Degree + field + institution usually come on one line
   // Example:
@@ -123,6 +138,16 @@ function renderEducationLine(line) {
   }
 
   return paragraphs;
+}
+
+function buildContactLine(meta = {}) {
+  const location = String(meta.location || "").trim();
+  const phone = String(meta.phone || "").trim();
+  const email = String(meta.email || "").trim();
+  const linkedIn = normalizeLinkedIn(meta.linkedIn);
+
+  const parts = [location, phone, email, linkedIn].filter(Boolean);
+  return parts.length ? parts.join(" • ") : null;
 }
 
 /**
@@ -270,8 +295,10 @@ function markdownToParagraphs(markdown) {
 
 export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
   const nameLine = buildNameLine(meta);
+  const contactLine = buildContactLine(meta);
 
   const header = [];
+
   if (nameLine) {
     header.push(
       new Paragraph({
@@ -286,6 +313,22 @@ export async function buildDocxBufferFromMarkdown(markdown, meta = {}) {
         alignment: AlignmentType.CENTER,
         spacing: { after: 120 },
       })
+    );
+  }
+
+  if (contactLine) {
+    header.push(
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: contactLine,
+                    size: 20, // 10pt
+                    color: COLOR_BODY,
+                }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 160 },
+        })
     );
   }
 

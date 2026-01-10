@@ -14,6 +14,11 @@ export default function App() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [company, setCompany] = useState("");  
+  const [showContact, setShowContact] = useState(false);
+  const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [linkedIn, setLinkedIn] = useState("");
 
   function downloadTextFile({ filename, content, mime }) {
     const blob = new Blob([content], { type: mime });
@@ -86,7 +91,11 @@ export default function App() {
       body: JSON.stringify({ 
         markdown: output,
         firstName,
-        lastName 
+        lastName,
+        location,
+        phone,
+        email,
+        linkedIn,
       }),
     });
 
@@ -153,6 +162,61 @@ export default function App() {
                 placeholder="Company"
               />
             </label>
+
+            <button
+              type="button"
+              className="buttonSecondary"
+              onClick={() => setShowContact((v) => !v)}
+              style={{ padding: "8px 10px" }}
+            >
+              {showContact ? "Hide contact info" : "+ Contact info"}
+            </button>
+
+            {showContact && (
+              <div style={{ width: "100%", marginTop: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, alighnItems: "end" }}>
+                  <label className="fieldLabel">
+                    Location
+                    <input
+                      className="select"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="City, ST"
+                    />
+                  </label>
+
+                  <label className="fieldLabel">
+                    Phone
+                    <input
+                      className="select"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="(555) 555-5555"
+                    />
+                  </label>
+
+                  <label className="fieldLabel">
+                    Email
+                    <input
+                      className="select"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@email.com"
+                    />
+                  </label>
+
+                  <label className="fieldLabel">
+                    LinkedIn
+                    <input
+                      className="select"
+                      value={linkedIn}
+                      onChange={(e) => setLinkedIn(e.target.value)}
+                      placeholder="linkedin.com/in/you"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
             
             <label className="fieldLabel">
               Tone
@@ -171,7 +235,7 @@ export default function App() {
                 <option value="leadership">Leadership</option>
               </select>
             </label>
-          </div>
+          </div>          
 
           <div className="btnRow">
             <button className="buttonPrimary" onClick={generate} disabled={loading}>
@@ -207,7 +271,7 @@ export default function App() {
               Download .docx
             </button>
           </div>
-        </div>
+        </div>            
       </div>
 
       {error && <div className="errorBox">{error}</div>}

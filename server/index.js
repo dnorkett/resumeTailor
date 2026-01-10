@@ -98,6 +98,10 @@ app.post("/api/export/docx", async (req, res) => {
     const buffer = await buildDocxBufferFromMarkdown(markdown, {
         firstName: req.body?.firstName,
         lastName: req.body?.lastName,
+        location: req.body?.location,
+        phone: req.body?.phone,
+        email: req.body?.email,
+        linkedin: req.body?.linkedin,
     });
 
     res.setHeader(
