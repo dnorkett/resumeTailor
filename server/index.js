@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { z } from "zod";
 import OpenAI from "openai";
-import { renderResumePrompt } from "./prompt.js";
 import { renderExtractPrompt } from "./prompt.js";
 import { renderComposePrompt } from "./prompt.js";
 import { buildDocxBufferFromMarkdown } from "./exportDocx.js";
