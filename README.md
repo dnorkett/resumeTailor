@@ -1,7 +1,6 @@
 # Resume Tailor
 
-Resume Tailor is a lightweight web application that transforms an existing resume into a job-specific, professionally rewritten version powered by AI.  
-It performs structured extraction, aligns the content to the job listing, and exports polished Markdown or DOCX resumes that are recruiter-ready and consistent.
+Resume Tailor is a lightweight web application that transforms an existing resume into a job-specific, professionally rewritten version powered by AI. It performs structured extraction, aligns the content to the job listing, and exports polished Markdown or DOCX resumes that are recruiter-ready and consistent.
 
 The app is intentionally simple, fast, and focused — built for people who apply to many roles and want a repeatable way to generate clean resumes without hallucinations or fluff.
 
