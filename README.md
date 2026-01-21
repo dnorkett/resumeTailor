@@ -20,8 +20,6 @@ Exported files follow an intelligent naming format:
 FIRST_LAST_COMPANY_Resume.docx
 ```
 
-Perfect for keeping applications organized.
-
 ---
 
 ## Key Features
@@ -44,10 +42,8 @@ This dramatically reduces hallucinations and ensures consistency.
 The exported Word file includes:
 - Centered name
 - Optional contact line (location | phone | email | LinkedIn)
-- Beautiful section headers with color accents
+- Section headers with color accents
 - Bullet spacing tuned for readability
-- Multi-column **skills table** for space efficiency
-- Improved education formatting (bold degree, italic institution)
 
 ### 📄 Markdown Export
 - Pure Markdown suitable for ATS systems or GitHub storage
@@ -146,7 +142,7 @@ http://localhost:5173
 
 - All prompts are externalized so you can iterate freely.
 - DOCX export is carefully tuned to create visually consistent, recruiter-friendly resumes.
-- The app does **not** long-term storage; everything is client-side or in-memory.
+- The app does **not** storage user data long term; everything is client-side or in-memory.
 
 ---
 
