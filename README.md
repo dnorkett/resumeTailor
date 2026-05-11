@@ -157,15 +157,6 @@ http://localhost:5173
 - **Multiple base resume profiles** (e.g., PM, IC, leadership)
 - **Interview tips** to help prepare for the interview
 - **Authentication** to allow for the storage of skill lists and contact details
-
-### 🤖 AI Improvements
 - Model-driven **resume shortening** to enforce 1-page mode  
-- **Job similarity scoring** for prioritizing applications  
-- **“Punch up my achievements” mode** (rewrite bullets to be more outcome-focused using existing facts only)
-
-### 🧩 Integrations
-- LinkedIn job import  
-- Greenhouse / Lever / Indeed copy-paste cleanup  
-- GitHub Pages / static hosting for sharing the tool with others
 
 ---
